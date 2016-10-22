@@ -1,15 +1,20 @@
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.FloatBuffer;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL44.GL_DYNAMIC_STORAGE_BIT;
+import static org.lwjgl.opengl.GL44.glBufferStorage;
 import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
@@ -52,8 +57,8 @@ public class Application {
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
-		int WIDTH = 640;
-		int HEIGHT = 480;
+		int WIDTH = 500;
+		int HEIGHT = 500;
 
 		// Create the window
 		window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL SuperBible Example", NULL, NULL);
@@ -92,6 +97,11 @@ public class Application {
         // bindings available for use.
         GL.createCapabilities();
 
+        /* glfwSetFramebufferSizeCallback(window, (window, width, height) -> {
+            System.out.println("width: " + width + "  height: " + height);
+            glViewport(0, 0, width, height);
+        }); */
+
         renderingProgram = compileShaders();
 
         glCreateVertexArrays(vertexArrayObject);
@@ -121,10 +131,40 @@ public class Application {
         // Use the program object we created earlier for rendering
         glUseProgram(renderingProgram);
 
-        glPointSize(40.0f);
+        /* float[] vertices = { 0.25f, -0.25f, 0.0f, 1.0f,
+                              -0.25f, -0.25f, 0.0f, 1.0f,
+                               0.25f, 0.25f, 0.0f, 1.0f }; */
 
-        // Draw one point
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        float[] vertices = {
+                // Left bottom triangle
+                -0.125f, 0.125f, 0f, 1.0f,
+                -0.125f, -0.125f, 0f, 1.0f,
+                0.125f, -0.125f, 0f, 1.0f,
+                // Right top triangle
+                0.125f, -0.125f, 0f, 1.0f,
+                0.125f, 0.125f, 0f, 1.0f,
+                -0.125f, 0.125f, 0f, 1.0f
+        };
+
+        float[] offset = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+        int[] vertexBufferObject = new int[2];
+        glCreateBuffers(vertexBufferObject);
+
+        // Quad vertices
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject[0]);
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);;
+
+        glVertexAttribPointer(0, 4, GL_FLOAT, false, 4 * Float.BYTES, 0);
+        glEnableVertexArrayAttrib(vertexArrayObject[0], 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // Offset
+        glVertexAttrib4fv(1, offset);
+
+        // Draw triangles
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
 	private void shutdown() {
