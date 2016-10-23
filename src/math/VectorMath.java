@@ -1,3 +1,5 @@
+package math;
+
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
@@ -5,6 +7,18 @@ import static java.lang.Math.sin;
  * Created by lowery on 10/22/2016.
  */
 public class VectorMath {
+
+    public static float[] identity() {
+        float[] i = {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        };
+
+        return i;
+    }
+
     public static float[] translate(float x, float y, float z) {
         float[] t = {
             1.0f, 0.0f, 0.0f, x,

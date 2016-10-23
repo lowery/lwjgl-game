@@ -1,30 +1,51 @@
-import org.lwjgl.BufferUtils;
+import input.KeyEvent;
+import input.MouseEvent;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.FloatBuffer;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL44.GL_DYNAMIC_STORAGE_BIT;
 import static org.lwjgl.opengl.GL44.glBufferStorage;
 import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
-public class Application {
+public abstract class Application {
 
 	// The window handle
 	private long window;
 
+	private int width;
+	private int height;
+	private String title;
+
     int[] vertexArrayObject = new int[1];
     int renderingProgram;
+
+	private String vertexShaderFile;
+	private String fragmentShaderFile;
+
+	protected Queue<KeyEvent> keyEvents = new LinkedList<>();
+	protected Queue<MouseEvent> mouseEvents = new LinkedList<>();
+
+	protected void setWindowProperties(int width, int height, String title) {
+		this.width = width;
+		this.height = height;
+		this.title = title;
+	}
+
+	protected void setShaders(String vertexShaderFile, String fragmentShaderFile) {
+		this.vertexShaderFile = vertexShaderFile;
+		this.fragmentShaderFile = fragmentShaderFile;
+	}
 
 	public void run() {
 		try {
@@ -57,18 +78,34 @@ public class Application {
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
-		int WIDTH = 500;
-		int HEIGHT = 500;
-
 		// Create the window
-		window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL SuperBible Example", NULL, NULL);
+		window = glfwCreateWindow(width, height, title, NULL, NULL);
 		if ( window == NULL )
 			throw new RuntimeException("Failed to create the GLFW window");
 
 		// Setup a key callback. It will be called every time a key is pressed, repeated or released.
 		glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-			if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
+			if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
 				glfwSetWindowShouldClose(window, true); // We will detect this in our rendering loop
+			}
+
+			if (action == GLFW_PRESS || action == GLFW_RELEASE) {
+				switch (key) {
+					case GLFW_KEY_SPACE:
+					case GLFW_KEY_W:
+					case GLFW_KEY_A:
+					case GLFW_KEY_S:
+					case GLFW_KEY_D:
+					case GLFW_KEY_E:
+					case GLFW_KEY_Q:
+						keyEvents.add(new KeyEvent(key, action));
+						break;
+				}
+			}
+		});
+
+		glfwSetScrollCallback(window, (window, xoffset, yoffset) -> {
+			mouseEvents.add(new MouseEvent(MouseEvent.EVT_MOUSE_SCROLL, xoffset, yoffset));
 		});
 
 		// Get the resolution of the primary monitor
@@ -76,8 +113,8 @@ public class Application {
 		// Center our window
 		glfwSetWindowPos(
 			window,
-			(vidmode.width() - WIDTH) / 2,
-			(vidmode.height() - HEIGHT) / 2
+			(vidmode.width() - width) / 2,
+			(vidmode.height() - height) / 2
 		);
 
 		// Make the OpenGL context current
@@ -102,80 +139,47 @@ public class Application {
             glViewport(0, 0, width, height);
         }); */
 
-        renderingProgram = compileShaders();
+        renderingProgram = compileShaders(vertexShaderFile, fragmentShaderFile);
 
         glCreateVertexArrays(vertexArrayObject);
         glBindVertexArray(vertexArrayObject[0]);
     }
 
 	private void loop() {
+        long lastTime, deltaTime;
+
+        lastTime = System.currentTimeMillis();
+
 		// Run the rendering loop until the user has attempted to close
 		// the window or has pressed the ESCAPE key.
 		while ( !glfwWindowShouldClose(window) ) {
+            deltaTime = System.currentTimeMillis() - lastTime;
+            lastTime = System.currentTimeMillis();
 
-			render(System.currentTimeMillis());
-			
+            // Poll for window events. The key callback above will only be
+            // invoked during this call.
+            glfwPollEvents();
+            update(deltaTime);
+
+			//render(deltaTime);
+            render(deltaTime);
 			glfwSwapBuffers(window); // swap the color buffers
 
-			// Poll for window events. The key callback above will only be
-			// invoked during this call.
-			glfwPollEvents();
 		}
 	}
 
-	private void render(long currentTime) {
-		// Simply clear the window with red
-		final float[] color =  { 1.0f, 0.0f, 0.0f, 1.0f };
-		glClearBufferfv(GL_COLOR, 0, color);
-
-        // Use the program object we created earlier for rendering
-        glUseProgram(renderingProgram);
-
-        /* float[] vertices = { 0.25f, -0.25f, 0.0f, 1.0f,
-                              -0.25f, -0.25f, 0.0f, 1.0f,
-                               0.25f, 0.25f, 0.0f, 1.0f }; */
-
-        float[] vertices = {
-                // Left bottom triangle
-                -0.125f, 0.125f, 0f, 1.0f,
-                -0.125f, -0.125f, 0f, 1.0f,
-                0.125f, -0.125f, 0f, 1.0f,
-                // Right top triangle
-                0.125f, -0.125f, 0f, 1.0f,
-                0.125f, 0.125f, 0f, 1.0f,
-                -0.125f, 0.125f, 0f, 1.0f
-        };
-
-        float[] offset = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-        int[] vertexBufferObject = new int[2];
-        glCreateBuffers(vertexBufferObject);
-
-        // Quad vertices
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject[0]);
-        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);;
-
-        glVertexAttribPointer(0, 4, GL_FLOAT, false, 4 * Float.BYTES, 0);
-        glEnableVertexArrayAttrib(vertexArrayObject[0], 0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // Offset
-        glVertexAttrib4fv(1, offset);
-
-        // Draw triangles
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-	}
+    abstract void update(long deltaTime);
+    abstract void render(long deltaTime);
 
 	private void shutdown() {
         glDeleteVertexArrays(vertexArrayObject);
         glDeleteProgram(renderingProgram);
     }
 
-	private int compileShaders() {
+	private int compileShaders(String vertexShaderFile, String fragmentShaderFile) {
 		// Source code for vertex and fragment shaders
-		String vertexShaderSource = loadShaderSource("/shaders/screen.vert");
-		String fragmentShaderSource = loadShaderSource("/shaders/screen.frag");
+		String vertexShaderSource = loadShaderSource("/shaders/" + vertexShaderFile);
+		String fragmentShaderSource = loadShaderSource("/shaders/" + fragmentShaderFile);
 
 		// Create and compile vertex shader
 		int vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -219,9 +223,4 @@ public class Application {
 
 		return source.toString();
 	}
-
-	public static void main(String[] args) {
-		new Application().run();
-	}
-
 }
