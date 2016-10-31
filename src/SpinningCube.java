@@ -3,7 +3,9 @@ import math.VectorMath;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glClearBufferfv;
+import static org.lwjgl.opengl.GL45.glCreateVertexArrays;
 import static org.lwjgl.opengl.GL45.glEnableVertexArrayAttrib;
 
 public class SpinningCube extends Application {
@@ -34,6 +36,9 @@ public class SpinningCube extends Application {
 
     @Override
     public void render(long deltaTime) {
+        // Compile the shaders into a program object
+        int renderingProgram = compileShaders(VERTEX_SHADER, FRAGMENT_SHADER);
+
         // Use the program object we created earlier for rendering
         glUseProgram(renderingProgram);
         glEnable(GL_CULL_FACE);
@@ -98,6 +103,12 @@ public class SpinningCube extends Application {
                 0.25f, 0.25f, -0.25f, 1.0f
         };
 
+        // VAO
+        int[] vertexArrayObject = new int[1];
+        glCreateVertexArrays(vertexArrayObject);
+        glBindVertexArray(vertexArrayObject[0]);
+
+        // VBO
         int[] vertexBufferObject = new int[1];
         glGenBuffers(vertexBufferObject);
         glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject[0]);

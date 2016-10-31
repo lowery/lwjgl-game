@@ -139,10 +139,10 @@ public abstract class Application {
             glViewport(0, 0, width, height);
         }); */
 
-        renderingProgram = compileShaders(vertexShaderFile, fragmentShaderFile);
+        //renderingProgram = compileShaders(vertexShaderFile, fragmentShaderFile);
 
-        glCreateVertexArrays(vertexArrayObject);
-        glBindVertexArray(vertexArrayObject[0]);
+        //glCreateVertexArrays(vertexArrayObject);
+        //glBindVertexArray(vertexArrayObject[0]);
     }
 
 	private void loop() {
@@ -176,7 +176,7 @@ public abstract class Application {
         glDeleteProgram(renderingProgram);
     }
 
-	private int compileShaders(String vertexShaderFile, String fragmentShaderFile) {
+	public int compileShaders(String vertexShaderFile, String fragmentShaderFile) {
 		// Source code for vertex and fragment shaders
 		String vertexShaderSource = loadShaderSource("/shaders/" + vertexShaderFile);
 		String fragmentShaderSource = loadShaderSource("/shaders/" + fragmentShaderFile);

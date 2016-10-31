@@ -6,8 +6,10 @@ import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glClearBufferfv;
 import static org.lwjgl.opengl.GL45.glCreateBuffers;
+import static org.lwjgl.opengl.GL45.glCreateVertexArrays;
 import static org.lwjgl.opengl.GL45.glEnableVertexArrayAttrib;
 
 public class JumpingQuad extends Application {
@@ -53,6 +55,9 @@ public class JumpingQuad extends Application {
 
     @Override
     public void render(long deltaTime) {
+        // Compile the shaders into a program object
+        int renderingProgram = compileShaders(VERTEX_SHADER, FRAGMENT_SHADER);
+
         // Simply clear the window with black
         final float[] color = {0.0f, 0.0f, 0.0f, 1.0f};
         glClearBufferfv(GL_COLOR, 0, color);
@@ -71,6 +76,12 @@ public class JumpingQuad extends Application {
                 -0.125f, 0.125f, 0f, 1.0f
         };
 
+        // VAO
+        int[] vertexArrayObject = new int[1];
+        glCreateVertexArrays(vertexArrayObject);
+        glBindVertexArray(vertexArrayObject[0]);
+
+        // VBO
         int[] vertexBufferObject = new int[2];
         glCreateBuffers(vertexBufferObject);
 

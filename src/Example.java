@@ -3,8 +3,10 @@ import math.VectorMath;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glClearBufferfv;
 import static org.lwjgl.opengl.GL45.glCreateBuffers;
+import static org.lwjgl.opengl.GL45.glCreateVertexArrays;
 import static org.lwjgl.opengl.GL45.glEnableVertexArrayAttrib;
 
 /**
@@ -36,6 +38,9 @@ public class Example extends Application {
         final float[] color = {1.0f, 0.0f, 0.0f, 1.0f};
         glClearBufferfv(GL_COLOR, 0, color);
 
+        // Compile the shaders into a program object
+        int renderingProgram = compileShaders(VERTEX_SHADER, FRAGMENT_SHADER);
+
         // Use the program object we created earlier for rendering
         glUseProgram(renderingProgram);
 
@@ -45,6 +50,12 @@ public class Example extends Application {
                 0.5f, 0.5f, 0.0f, 1.0f
         };
 
+        // VAO
+        int[] vertexArrayObject = new int[1];
+        glCreateVertexArrays(vertexArrayObject);
+        glBindVertexArray(vertexArrayObject[0]);
+
+        // VBO
         int[] vertexBufferObject = new int[2];
         glCreateBuffers(vertexBufferObject);
 
