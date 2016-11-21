@@ -18,10 +18,10 @@ import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glClearBufferfv;
 import static org.lwjgl.opengl.GL45.*;
 
-public class TexturedCube extends Application {
+public class SphereTest extends Application {
 
-    private final String VERTEX_SHADER = "texture.vert";
-    private final String FRAGMENT_SHADER = "texture.frag";
+    private final String VERTEX_SHADER = "screen.vert";
+    private final String FRAGMENT_SHADER = "screen.frag";
 
     private float yRotAngle;                  // y-axis rotation angle in radians
     private float scale = .5f;                  // scale
@@ -30,14 +30,17 @@ public class TexturedCube extends Application {
     float[] vertices;
     ByteBuffer texture;
 
-    public TexturedCube(int width, int height, String title) {
+    private int triangles;
+
+    public SphereTest(int width, int height, String title) {
         setWindowProperties(width, height, title);
         setShaders(VERTEX_SHADER, FRAGMENT_SHADER);
 
 
         OBJLoader loader = new OBJLoader();
-        Mesh mesh = loader.load("wooden_crate.obj");
+        Mesh mesh = loader.load("sphere.obj");
         List<Vertex> vertexData = mesh.getVertices();
+        triangles = vertexData.size();
 
         vertices = new float[vertexData.size() * 6];
 
@@ -83,82 +86,6 @@ public class TexturedCube extends Application {
         final float[] color = {0.0f, 0.0f, 0.0f, 1.0f};
         glClearBufferfv(GL_COLOR, 0, color);
 
-        /*float[] vertexPositions = {
-                // front face
-                -1f, -1f, 0.0f, 1.0f,
-                1f, -1f, 0.0f, 1.0f,
-                -1f, 1f, 0.0f, 1.0f,
-
-                -1f, 1f, 0.0f, 1.0f,
-                1f, -1f, 0.0f, 1.0f,
-                1f, 1f, 0.0f, 1.0f,
-        };*/
-
-
-        /*float[] vertices = {
-                // Positions                // Colors                 // Texture Coords
-                0.5f,  0.5f, 0.0f, 1.0f,    1.0f, 0.0f, 0.0f, 1.0f,   1.0f, 1.0f,               // Top Right
-                0.5f, -0.5f, 0.0f, 1.0f,    0.0f, 1.0f, 0.0f, 1.0f,   1.0f, 0.0f,               // Bottom Right
-                -0.5f, -0.5f, 0.0f, 1.0f,   0.0f, 0.0f, 1.0f, 1.0f,   0.0f, 0.0f,               // Bottom Left
-        };*/
-
-        /*float[] vertices = {
-                // front face
-                -0.25f, -0.25f, 0.25f, 1.0f,    0.0f, 0.0f,
-                0.25f, -0.25f, 0.25f, 1.0f,     1.0f, 0.0f,
-                -0.25f, 0.25f, 0.25f, 1.0f,     0.0f, 1.0f,
-
-                -0.25f, 0.25f, 0.25f, 1.0f,     0.0f, 1.0f,
-                0.25f, -0.25f, 0.25f, 1.0f,     1.0f, 0.0f,
-                0.25f, 0.25f, 0.25f, 1.0f,      1.0f, 1.0f,
-
-                // right face
-                0.25f, -0.25f, 0.25f, 1.0f,     0.0f, 0.0f,
-                0.25f, -0.25f, -0.25f, 1.0f,    1.0f, 0.0f,
-                0.25f, 0.25f, 0.25f, 1.0f,      0.0f, 1.0f,
-
-                0.25f, 0.25f, 0.25f, 1.0f,      0.0f, 1.0f,
-                0.25f, -0.25f, -0.25f, 1.0f,    1.0f, 0.0f,
-                0.25f, 0.25f, -0.25f, 1.0f,     1.0f, 1.0f,
-
-                // back face
-
-                0.25f, -0.25f, -0.25f, 1.0f,    0.0f, 0.0f,
-                -0.25f, -0.25f, -0.25f, 1.0f,   1.0f, 0.0f,
-                -0.25f, 0.25f, -0.25f, 1.0f,    1.0f, 1.0f,
-
-                -0.25f, 0.25f, -0.25f, 1.0f,    1.0f, 1.0f,
-                0.25f, 0.25f, -0.25f, 1.0f,     0.0f, 1.0f,
-                0.25f, -0.25f, -0.25f, 1.0f,    0.0f, 0.0f,
-
-                // left face
-                -0.25f, -0.25f, -0.25f, 1.0f,   0.0f, 0.0f,
-                -0.25f, -0.25f, 0.25f, 1.0f,    1.0f, 0.0f,
-                -0.25f, 0.25f, 0.25f, 1.0f,     1.0f, 1.0f,
-
-                -0.25f, 0.25f, 0.25f, 1.0f,     1.0f, 1.0f,
-                -0.25f, 0.25f, -0.25f, 1.0f,    0.0f, 1.0f,
-                -0.25f, -0.25f, -0.25f, 1.0f,   0.0f, 0.0f,
-
-                // bottom face
-                0.25f, -0.25f, 0.25f, 1.0f,     1.0f, 1.0f,
-                -0.25f, -0.25f, 0.25f, 1.0f,    0.0f, 1.0f,
-                -0.25f, -0.25f, -0.25f, 1.0f,   0.0f, 0.0f,
-
-                -0.25f, -0.25f, -0.25f, 1.0f,   0.0f, 0.0f,
-                0.25f, -0.25f, -0.25f, 1.0f,    1.0f, 0.0f,
-                0.25f, -0.25f, 0.25f, 1.0f,     1.0f, 1.0f,
-
-                // top face
-                -0.25f, 0.25f, 0.25f, 1.0f,     0.0f, 0.0f,
-                0.25f, 0.25f, 0.25f, 1.0f,      1.0f, 0.0f,
-                -0.25f, 0.25f, -0.25f, 1.0f,    0.0f, 1.0f,
-
-                -0.25f, 0.25f, -0.25f, 1.0f,    0.0f, 1.0f,
-                0.25f, 0.25f, 0.25f, 1.0f,      1.0f, 0.0f,
-                0.25f, 0.25f, -0.25f, 1.0f,      1.0f, 1.0f
-        };*/
-
         // VAO
         int[] vertexArrayObject = new int[1];
         glCreateVertexArrays(vertexArrayObject);
@@ -172,40 +99,40 @@ public class TexturedCube extends Application {
 
         glVertexAttribPointer(0, 4, GL_FLOAT, false, 6 * Float.BYTES, 0); // positions
         //glVertexAttribPointer(1, 4, GL_FLOAT, false, 10 * Float.BYTES, 4 * Float.BYTES); // colors
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, 6 * Float.BYTES, 4 * Float.BYTES); // texture
+        //glVertexAttribPointer(2, 2, GL_FLOAT, false, 6 * Float.BYTES, 4 * Float.BYTES); // texture
 
         glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
+        //glEnableVertexAttribArray(1);
         //glEnableVertexAttribArray(2);
 
         //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         // texture
-        ByteBuffer pixels = texture;
-        int imageHeight = 1024;
-        int imageWidth = 1024;
+        //ByteBuffer pixels = texture;
+        //int imageHeight = 1024;
+        //int imageWidth = 1024;
 
-        int[] textureObject = new int[1];
-        glGenTextures(textureObject);
-        glBindTexture(GL_TEXTURE_2D, textureObject[0]);
+       // int[] textureObject = new int[1];
+        //glGenTextures(textureObject);
+        //glBindTexture(GL_TEXTURE_2D, textureObject[0]);
 
         // Set our texture parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+       // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+       // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         // Set texture filtering
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
         float[] transform = VectorMath.multiply(
                 VectorMath.rotate(yRotAngle / 2, yRotAngle, 0.0f),
                 VectorMath.scale(scale*0.25f, scale*0.25f, scale*0.25f)
         );
 
-        glUniformMatrix4fv(2, false, transform);
+        glUniformMatrix4fv(1, false, transform);
 
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawArrays(GL_TRIANGLES, 0, triangles);
     }
 
     public ByteBuffer loadTexture(String filename) {
@@ -237,7 +164,7 @@ public class TexturedCube extends Application {
     }
 
     public static void main(String[] args) {
-        new TexturedCube(1024, 1024, "OpenGL Textured Cube").run();
+        new SphereTest(500, 500, "OpenGL Sphere Test").run();
     }
 
 }

@@ -1,4 +1,9 @@
 import math.VectorMath;
+import mesh.Mesh;
+import mesh.OBJLoader;
+import mesh.Vertex;
+
+import java.util.List;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
@@ -46,7 +51,7 @@ public class SpinningCube extends Application {
         final float[] color = {0.0f, 0.0f, 0.0f, 1.0f};
         glClearBufferfv(GL_COLOR, 0, color);
 
-        float[] vertexPositions = {
+        /*float[] vertexPositions = {
                 // front face
                 -0.25f, -0.25f, 0.25f, 1.0f,
                 0.25f, -0.25f, 0.25f, 1.0f,
@@ -101,7 +106,26 @@ public class SpinningCube extends Application {
                 -0.25f, 0.25f, -0.25f, 1.0f,
                 0.25f, 0.25f, 0.25f, 1.0f,
                 0.25f, 0.25f, -0.25f, 1.0f
-        };
+        };*/
+
+
+        OBJLoader loader = new OBJLoader();
+        Mesh mesh = loader.load("wooden_crate.obj");
+        List<Vertex> vertexData = mesh.getVertices();
+
+        float[] vertexPositions = new float[vertexData.size() * 4];
+
+        for (int i = 0; i < vertexData.size(); i++) {
+            Vertex v = vertexData.get(i);
+
+            float[] position = v.getPosition();
+            float[] texCoords = v.getTexCoords();
+
+            vertexPositions[i*4] = position[0]*0.1f;
+            vertexPositions[(i*4)+1] = position[1]*0.1f;
+            vertexPositions[(i*4)+2] = position[2]*0.1f;
+            vertexPositions[(i*4)+3] = 1.0f;
+        }
 
         // VAO
         int[] vertexArrayObject = new int[1];
@@ -123,6 +147,8 @@ public class SpinningCube extends Application {
                 VectorMath.rotate(yRotAngle / 2, yRotAngle, 0.0f),
                 VectorMath.scale(scale, scale, scale)
         );
+
+        //float[] transform = VectorMath.identity();
 
         // rotate and scale
         glUniformMatrix4fv(1, false, transform);
