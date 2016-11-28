@@ -1,17 +1,29 @@
 import input.KeyEvent;
 import input.MouseEvent;
+import mesh.Mesh;
+import mesh.OBJLoader;
+import mesh.Texture;
+import opengl.Model;
+import opengl.Shader;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_RGB;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL44.glBufferStorage;
@@ -27,11 +39,14 @@ public abstract class Application {
 	private int height;
 	private String title;
 
-    int[] vertexArrayObject = new int[1];
-    int renderingProgram;
+    private Shader shader;
+    private Model model;
 
 	private String vertexShaderFile;
 	private String fragmentShaderFile;
+
+	private String meshFile;
+	private String textureFile;
 
 	protected Queue<KeyEvent> keyEvents = new LinkedList<>();
 	protected Queue<MouseEvent> mouseEvents = new LinkedList<>();
@@ -45,6 +60,14 @@ public abstract class Application {
 	protected void setShaders(String vertexShaderFile, String fragmentShaderFile) {
 		this.vertexShaderFile = vertexShaderFile;
 		this.fragmentShaderFile = fragmentShaderFile;
+	}
+
+	protected void setTexture(String textureFile) {
+		this.textureFile = textureFile;
+	}
+
+	protected void setMesh(String meshFile) {
+		this.meshFile = meshFile;
 	}
 
 	public void run() {
@@ -134,15 +157,23 @@ public abstract class Application {
         // bindings available for use.
         GL.createCapabilities();
 
-        /* glfwSetFramebufferSizeCallback(window, (window, width, height) -> {
-            System.out.println("width: " + width + "  height: " + height);
+        // On window resize
+        glfwSetFramebufferSizeCallback(window, (window, width, height) -> {
             glViewport(0, 0, width, height);
-        }); */
+        });
 
-        //renderingProgram = compileShaders(vertexShaderFile, fragmentShaderFile);
+		// Compile the shaders into a program object
+		shader = new Shader(vertexShaderFile, fragmentShaderFile);
 
-        //glCreateVertexArrays(vertexArrayObject);
-        //glBindVertexArray(vertexArrayObject[0]);
+		// Use the program object we created previously for rendering
+        shader.useProgram();
+
+		// Enable back face culling
+		glEnable(GL_CULL_FACE);
+
+        // Load assets into buffers
+
+		model = new Model(meshFile, textureFile);
     }
 
 	private void loop() {
@@ -172,55 +203,7 @@ public abstract class Application {
     abstract void render(long deltaTime);
 
 	private void shutdown() {
-        glDeleteVertexArrays(vertexArrayObject);
-        glDeleteProgram(renderingProgram);
+        model.deleteVertexArrays();
+        shader.deleteProgram();
     }
-
-	public int compileShaders(String vertexShaderFile, String fragmentShaderFile) {
-		// Source code for vertex and fragment shaders
-		String vertexShaderSource = loadShaderSource("/shaders/" + vertexShaderFile);
-		String fragmentShaderSource = loadShaderSource("/shaders/" + fragmentShaderFile);
-
-		// Create and compile vertex shader
-		int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vertexShader, vertexShaderSource);
-		glCompileShader(vertexShader);
-
-		// Create and compile fragment shader
-		int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fragmentShader, fragmentShaderSource);
-
-		// Create program, attach shaders to it, and link it
-		int program = glCreateProgram();
-		glAttachShader(program, vertexShader);
-		glAttachShader(program, fragmentShader);
-		glLinkProgram(program);
-
-		// Delete the shaders as the program has them now
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
-
-		return program;
-	}
-
-	private String loadShaderSource(String filename) {
-		// Load shader source from resources
-		InputStream in = Application.class.getResourceAsStream(filename);
-		StringBuilder source = new StringBuilder();
-
-		// Read input line by line and append to string builder
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-			String line;
-
-			while ((line = reader.readLine()) != null) {
-				source.append(line).append('\n');
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(-1);
-		}
-
-		return source.toString();
-	}
 }

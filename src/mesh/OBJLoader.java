@@ -15,50 +15,8 @@ public class OBJLoader {
 
     private float maxLength = 0;
 
-    public static void main(String[] args) {
-        OBJLoader loader = new OBJLoader();
-        Mesh mesh = loader.load("wooden_crate.obj");
-        List<Vertex> vertexData = mesh.getVertices();
-
-        float[] vertexPositions = new float[vertexData.size() * 6];
-
-        for (int i = 0; i < vertexData.size(); i++) {
-            Vertex v = vertexData.get(i);
-
-            float[] position = v.getPosition();
-            float[] texCoords = v.getTexCoords();
-
-            vertexPositions[i*6] = position[0]/mesh.getScale();
-            vertexPositions[(i*6)+1] = position[1]/mesh.getScale();
-            vertexPositions[(i*6)+2] = position[2]/mesh.getScale();
-            vertexPositions[(i*6)+3] = 1.0f;
-
-            vertexPositions[(i*6)+4] = texCoords[0];
-            vertexPositions[(i*6)+5] = texCoords[1];
-        }
-
-        loader.printVertices();
-/*
-        for (int i = 0; i < vertexPositions.length; i++) {
-            System.out.print(vertexPositions[i]);
-
-            if ((i+1) % 6 == 0) {
-                System.out.println();
-            } else {
-                System.out.print(", ");
-            }
-        }
-*/
-    }
-
-    public void printVertices() {
-        for (float[] vertex : vertices) {
-
-            System.out.printf("%f %f %f\n", vertex[0]/(maxLength*2),vertex[1]/(maxLength*2),vertex[2]/(maxLength*2));
-        }
-
-        System.out.println("scale: {" + (maxLength*2) + ", " + (maxLength*2) + ", " + (maxLength*2) + "}");
-    }
+    private float[] max = new float[3];
+    private float[] min = new float[3];
 
     public Mesh load(String filename) {
         InputStream objFile = OBJLoader.class.getResourceAsStream("/models/" + filename);
@@ -80,7 +38,21 @@ public class OBJLoader {
                     if (token.equals("v")) {
                         float[] v = parseVector(tokenizer, 3);
 
-                        // Check max length for scale
+                        // keep track of max and min for scale and bounding box
+                        for (int i = 0; i < 3; i++) {
+                            if (v[i] > max[i]) {
+                                max[i] = v[i];
+                            }
+
+                            if (v[i] < min[i]) {
+                                min[i] = v[i];
+                            }
+
+                            if (Math.abs(v[i]) > maxLength) {
+                                maxLength = Math.abs(v[i]);
+                            }
+                        }
+
                         for (int i = 0; i < 3; i++) {
                             if (Math.abs(v[i]) > maxLength) {
                                 maxLength = Math.abs(v[i]);
@@ -114,6 +86,7 @@ public class OBJLoader {
         }
 
         mesh.setScale(maxLength);
+        mesh.setBoundingBox(new BoundingBox(max, min));
 
         return mesh;
     }
